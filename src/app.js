@@ -1,27 +1,18 @@
 const express = require("express");
+const { authUser } = require("../middlewares/auth");
 
 const app = express();
 
-app.get(
-  "/user",
-  (req, res, next) => {
-    next();
-    console.log("handling 1st route handler");
-  },
-  (req, res, next) => {
-    next();
-    console.log("handling 2nd route handler");
-    res.send("Response 2");
-  },
-  (req, res, next) => {
-    next();
-    res.send("Response 3");
-    console.log("handling 3rd route handler");
-  },
-  (req, res, next) => {
-    console.log("handling 4th route handler");
-  }
-);
+// Checking the authorization of a user is present or not
+app.use("/admin", authUser);
+
+app.get("/admin/getAllData", (req, res) => {
+  res.send("Getting All Data");
+});
+
+app.get("/admin/deleteUser", (req, res) => {
+  res.send("User Deleted");
+});
 
 app.listen(3000, () => {
   console.log("App Listening");
