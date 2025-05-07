@@ -1,19 +1,27 @@
 const express = require("express");
-const { authUser } = require("../middlewares/auth");
-
+const dbConnect = require("./config/database");
 const app = express();
 
-// Checking the authorization of a user is present or not
-app.use("/admin", authUser);
+const User = require("./models/user");
 
-app.get("/admin/getAllData", (req, res) => {
-  res.send("Getting All Data");
+app.use(express.json());
+
+app.post("/signup", async (req, res) => {
+  const user = new User(req.body);
+
+  try {
+    await user.save();
+    res.send("Successfully saved User Details");
+  } catch (err) {
+    res.status(400).send("Error in saving User Details");
+  }
 });
 
-app.get("/admin/deleteUser", (req, res) => {
-  res.send("User Deleted");
-});
-
-app.listen(3000, () => {
-  console.log("App Listening");
-});
+dbConnect()
+  .then(() => {
+    console.log("Database connected Successfully");
+    app.listen(3000, () => {
+      console.log("App Listening");
+    });
+  })
+  .catch((err) => console.error("Can't able to connect to Database"));
