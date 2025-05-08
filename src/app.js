@@ -14,7 +14,7 @@ app.post("/signup", async (req, res) => {
     await user.save();
     res.send("Successfully saved User Details");
   } catch (err) {
-    res.status(400).send("Error in saving User Details");
+    res.status(400).send("Error in saving User Details, " + err.message);
   }
 });
 
@@ -55,14 +55,16 @@ app.patch("/user", async (req, res) => {
   const userId = req.body.id;
   const data = req.body;
   try {
-    const user = await User.findByIdAndUpdate({ _id: userId }, data);
+    const user = await User.findByIdAndUpdate({ _id: userId }, data, {
+      runValidators: true,
+    });
     if (user) {
       res.send("Updated Successfully");
     } else {
       res.status(404).send("Error in Updation");
     }
   } catch (err) {
-    res.status(400).send("Something went wrong");
+    res.status(400).send("Updation Error" + err.message);
   }
 });
 
