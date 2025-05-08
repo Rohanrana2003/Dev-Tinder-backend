@@ -5,8 +5,11 @@ const app = express();
 const User = require("./models/user");
 const bcrypt = require("bcrypt");
 const validator = require("validator");
+const cookieParser = require("cookie-parser");
+var jwt = require("jsonwebtoken");
 
 app.use(express.json());
+app.use(cookieParser());
 
 // Saving User Data Dynamically
 app.post("/signup", async (req, res) => {
@@ -54,6 +57,10 @@ app.post("/login", async (req, res) => {
 
     // Checking password is right or wrong
     if (isPasswordValid) {
+      // Creating a JWT token
+      const token = jwt.sign({ _id: user.id }, "Rohan@0274");
+      // Add the token to cookie andsend the response back
+      res.cookie("token", token);
       res.send("Login Successfull");
     } else {
       throw new Error("Invalid Credentials");
@@ -61,6 +68,25 @@ app.post("/login", async (req, res) => {
   } catch (err) {
     res.status(400).send("Error: " + err.message);
   }
+});
+
+// Profile API
+app.get("/profile", async (req, res) => {
+  const cookies = req.cookies;
+  const { token } = cookies;
+  if (!token) {
+    throw new Error("Invalid Token");
+  }
+
+  const decodedMessage = jwt.verify(token, "Rohan@0274");
+
+  const { _id } = decodedMessage;
+
+  const user = await User.findById(_id);
+  if (!user) {
+    throw new Error("Invalid Credentials");
+  }
+  res.send(user);
 });
 
 // Finding a User by email ID
