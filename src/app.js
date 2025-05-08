@@ -6,7 +6,6 @@ const User = require("./models/user");
 const bcrypt = require("bcrypt");
 const validator = require("validator");
 const cookieParser = require("cookie-parser");
-var jwt = require("jsonwebtoken");
 const { authUser } = require("./middlewares/auth");
 
 app.use(express.json());
@@ -54,14 +53,15 @@ app.post("/login", async (req, res) => {
     }
 
     // Comparing password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await user.validatePassword(password);
 
-    // Checking password is right or wrong
     if (isPasswordValid) {
       // Creating a JWT token
-      const token = jwt.sign({ _id: user.id }, "Rohan@0274");
+      const token = user.getJWT();
       // Add the token to cookie andsend the response back
-      res.cookie("token", token);
+      res.cookie("token", token, {
+        expires: new Date(Date.now() + 8 * 3600000),
+      });
       res.send("Login Successfull");
     } else {
       throw new Error("Invalid Credentials");
@@ -79,6 +79,12 @@ app.get("/profile", authUser, async (req, res) => {
   } catch (err) {
     res.status(400).send("Error");
   }
+});
+
+// Send Request API
+app.post("/sendconnectionrequest", authUser, (req, res) => {
+  const { user } = req;
+  res.send("Request sent by " + user.firstName);
 });
 
 dbConnect()
