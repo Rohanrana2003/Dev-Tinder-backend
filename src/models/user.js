@@ -52,7 +52,7 @@ const userSchema = mongoose.Schema(
     about: {
       type: String,
       default: "This is a user about dummy data",
-      minLength: 30,
+      minLength: 10,
       maxLength: 300,
     },
     photoUrl: {
