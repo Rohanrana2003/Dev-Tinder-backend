@@ -78,9 +78,6 @@ requestRouter.post(
         toUserId: loggedInUser._id,
         status: "interested",
       });
-      console.log("_id: ", requestId);
-      console.log("toUserId: ", loggedInUser._id);
-      console.log("status: ", status);
 
       if (!connectionRequest) {
         return res.status(400).json({ message: "Invalid Connection Request" });
