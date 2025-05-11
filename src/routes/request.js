@@ -4,6 +4,7 @@ const ConnectionRequest = require("../models/connectionRequest");
 const User = require("../models/user");
 const requestRouter = express.Router();
 
+// Sending Connection API
 requestRouter.post(
   "/request/send/:status/:toUserId",
   authUser,
@@ -52,6 +53,45 @@ requestRouter.post(
       res.json({ message: "Request Done", data: data });
     } catch (err) {
       res.status(400).send("Error in sending request: " + err.message);
+    }
+  }
+);
+
+// Accepting or Rejecting API
+requestRouter.post(
+  "/request/review/:status/:requestId",
+  authUser,
+  async (req, res) => {
+    try {
+      const loggedInUser = req.user;
+      const { status, requestId } = req.params;
+
+      // Allowing only "accepted", "rejected" as valid status type
+      const allowedStatus = ["accepted", "rejected"];
+      if (!allowedStatus.includes(status)) {
+        return res.status(400).json({ message: "Invalid Status type!" });
+      }
+
+      // Finding request on the basis of different Fields
+      const connectionRequest = await ConnectionRequest.findOne({
+        _id: requestId,
+        toUserId: loggedInUser._id,
+        status: "interested",
+      });
+      console.log("_id: ", requestId);
+      console.log("toUserId: ", loggedInUser._id);
+      console.log("status: ", status);
+
+      if (!connectionRequest) {
+        return res.status(400).json({ message: "Invalid Connection Request" });
+      }
+
+      connectionRequest.status = status;
+      const data = await connectionRequest.save();
+
+      res.json({ message: "Succesfully updated", data: data });
+    } catch (err) {
+      res.status(400).send("Error in reviewing request: " + err.message);
     }
   }
 );
