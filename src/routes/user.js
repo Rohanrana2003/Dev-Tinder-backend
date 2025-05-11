@@ -3,6 +3,8 @@ const { authUser } = require("../middlewares/auth");
 const ConnectionRequest = require("../models/connectionRequest");
 const userRouter = express.Router();
 
+const USER_SAFE_DATA = "firstName lastName about skills photoUrl age gender";
+
 // Get all the pending request
 userRouter.get("/user/requests/received", authUser, async (req, res) => {
   try {
@@ -12,10 +14,7 @@ userRouter.get("/user/requests/received", authUser, async (req, res) => {
     const incomingRequests = await ConnectionRequest.find({
       toUserId,
       status: "interested",
-    }).populate(
-      "fromUserId",
-      "firstName lastName about skills photoUrl age gender"
-    );
+    }).populate("fromUserId", USER_SAFE_DATA);
 
     if (incomingRequests.length === 0) {
       return res.status(400).json({ message: "No incoming requests" });
@@ -26,6 +25,43 @@ userRouter.get("/user/requests/received", authUser, async (req, res) => {
     res
       .status(400)
       .json({ message: "Error in fetching requests", error: err.message });
+  }
+});
+
+// Get all the connections API
+userRouter.get("/user/connections", authUser, async (req, res) => {
+  try {
+    const loggedInUser = req.user;
+
+    const connections = await ConnectionRequest.find({
+      $or: [
+        { toUserId: loggedInUser._id, status: "accepted" },
+        { fromUserId: loggedInUser._id, status: "accepted" },
+      ],
+    })
+      .populate("toUserId", USER_SAFE_DATA)
+      .populate("fromUserId", USER_SAFE_DATA);
+
+    if (connections.length === 0) {
+      return res.status(400).json({ message: "No incoming requests" });
+    }
+
+    const data = connections.map((x) => {
+      // Dont show the loggedIn user as connection itself
+      if (x.toUserId._id.toString() === loggedInUser._id.toString()) {
+        return x.fromUserId;
+      }
+      return x.toUserId;
+    });
+
+    res.json({
+      message: "Fetched connections successfully",
+      data: data,
+    });
+  } catch (err) {
+    res
+      .status(400)
+      .json({ message: "Error in fetching Connections", error: err.message });
   }
 });
 
