@@ -1,13 +1,20 @@
 const express = require("express");
 const dbConnect = require("./config/database");
-const { validateSignUpData } = require("./utils/validation");
+// const { validateSignUpData } = require("./utils/validation");
 const app = express();
-const User = require("./models/user");
-const bcrypt = require("bcrypt");
-const validator = require("validator");
+const cors = require("cors");
+// const User = require("./models/user");
+// const bcrypt = require("bcrypt");
+// const validator = require("validator");
 const cookieParser = require("cookie-parser");
-const { authUser } = require("./middlewares/auth");
+// const { authUser } = require("./middlewares/auth");
 
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(cookieParser());
 
