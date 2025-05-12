@@ -69,14 +69,17 @@ userRouter.get("/user/connections", authUser, async (req, res) => {
 // Get Feed API
 userRouter.get("/feed", authUser, async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1;
+    let limit = parseInt(req.query.limit) || 10;
+    limit = limit > 50 ? 50 : limit;
+
+    const skip = (page - 1) * limit;
+
     const loggedInUser = req.user;
 
     const connections = await ConnectionRequest.find({
       $or: [{ toUserId: loggedInUser._id }, { fromUserId: loggedInUser._id }],
-    })
-      .select("fromUserId toUserId")
-      .populate("fromUserId", "firstName")
-      .populate("toUserId", "firstName");
+    }).select("fromUserId toUserId");
 
     const hideUsers = new Set();
 
@@ -90,7 +93,10 @@ userRouter.get("/feed", authUser, async (req, res) => {
         { _id: { $nin: Array.from(hideUsers) } },
         { _id: { $ne: loggedInUser._id } },
       ],
-    }).select(USER_SAFE_DATA);
+    })
+      .select(USER_SAFE_DATA)
+      .skip(skip)
+      .limit(limit);
 
     res.json({ message: "Success", data: feedData });
   } catch (err) {
